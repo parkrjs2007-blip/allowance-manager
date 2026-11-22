@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만의 용돈 관리 프로그램</title>
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    padding: 30px 15px;
+    font-family: Arial, sans-serif;
+    background: #1e222d;
+    color: #e2e8f0;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+}
+
+header {
+    text-align: center;
+    background: #2a2f3d;
+    padding: 30px 20px;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* 오류 없이 언제 어디서나 선명하게 출력되는 남서울대학교 공식 배지 스타일 */
+.school-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 12px 24px;
+    border-radius: 30px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(59, 130, 246,.4);
+    letter-spacing: 1px;
+}
+
+header h1 { 
+    color: #60a5fa; 
+    margin: 0 0 8px 0;
+    font-size: 24px;
+}
+
+header p { 
+    color: #94a3b8; 
+    margin: 0;
+    font-size: 14px;
+}
+
+.card {
+    background: #2a2f3d;
+    padding: 22px;
+    margin-bottom: 18px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+h2 {
+    font-size: 19px;
+    margin-top: 0;
+    color: #60a5fa;
+}
+
+.summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.summary-item {
+    background: #1e222d;
+    padding: 18px 10px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.summary-item p {
+    margin: 0 0 10px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.summary-item strong {
+    font-size: 20px;
+    color: #60a5fa;
+    overflow-wrap: anywhere;
+}
+
+input, select, button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 9px;
+    border: 1px solid #475569;
+    background: #1e222d;
+    color: #e2e8f0;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+input::placeholder {
+    color: #64748b;
+}
+
+button {
+    border: none;
+    background: #3b82f6;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover { background: #2563eb; }
+
+.expense-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid #334155;
+}
+
+.expense-row button {
+    width: auto;
+    margin: 0;
+    padding: 7px 12px;
+    background: #ef4444;
+}
+
+.progress-bg {
+    height: 15px;
+    background: #1e222d;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.progress {
+    height: 100%;
+    width: 0%;
+    background: #3b82f6;
+    transition: width 0.3s;
+}
+
+#message {
+    margin-top: 15px;
+    font-weight: bold;
+    text-align: center;
+    color: #cbd5e1;
+}
+
+.category-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #334155;
+}
+
+.empty {
+    color: #64748b;
+    text-align: center;
+    padding: 15px;
+}
+
+@media (max-width: 550px) {
+    .summary { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <!-- 외부 사진 파일 없이도 완벽하게 출력되는 남서울대학교 공식 배지 -->
+    <div class="school-badge">🏛️ NAMSEOUL UNIVERSITY</div>
+    <h1>나만의 용돈 관리 프로그램</h1>
+    <p>현명한 소비 습관을 위한 나만의 지출 관리</p>
+</header>
+
+<section class="card">
+    <h2>월 용돈 설정</h2>
+    <input type="number" id="allowanceInput" placeholder="월 용돈을 입력하세요">
+    <button onclick="setAllowance()">용돈 설정 및 변경</button>
+</section>
+
+<section class="card">
+    <h2>이번 달 소비 현황</h2>
+    <div class="summary">
+        <div class="summary-item">
+            <p>이번 달 용돈</p>
+            <strong id="allowance">0원</strong>
+        </div>
+        <div class="summary-item">
+            <p>총 지출 금액</p>
+            <strong id="total">0원</strong>
+        </div>
+        <div class="summary-item">
+            <p>남은 용돈</p>
+            <strong id="remaining">0원</strong>
+        </div>
+    </div>
+
+    <p id="rateText">소비 비율: 0%</p>
+    <div class="progress-bg">
+        <div class="progress" id="progress"></div>
+    </div>
+    <p id="message">먼저 월 용돈을 설정해주세요.</p>
+</section>
+
+<section class="card">
+    <h2>지출 내역 추가</h2>
+
+    <select id="category">
+        <option value="">소비 항목 선택</option>
+        <option value="식비">식비</option>
+        <option value="교통비">교통비</option>
+        <option value="쇼핑">쇼핑</option>
+        <option value="문화생활">문화생활</option>
+        <option value="기타">기타</option>
+    </select>
+
+    <input type="number" id="amount" placeholder="지출 금액을 입력하세요">
+    <button onclick="addExpense()">지출 내역 추가</button>
+</section>
+
+<section class="card">
+    <h2>지출 내역 확인</h2>
+    <div id="expenseList">
+        <p class="empty">아직 등록된 지출 내역이 없습니다.</p>
+    </div>
+</section>
+
+<section class="card">
+    <h2>항목별 소비 분석</h2>
+    <div id="categoryList">
+        <p class="empty">지출 내역을 추가하면 분석 결과가 표시됩니다.</p>
+    </div>
+</section>
+
+</div>
+
+<script>
+let allowance = 0;
+let expenses = [];
+
+function formatMoney(number) {
+    return number.toLocaleString("ko-KR") + "원";
+}
+
+function setAllowance() {
+    const value = Number(document.getElementById("allowanceInput").value);
+
+    if (!Number.isFinite(value) || value <= 0 || !Number.isInteger(value)) {
+        alert("월 용돈을 1원 이상의 정수로 입력해주세요.");
+        return;
+    }
+
+    allowance = value;
+    updateScreen();
+    alert("월 용돈이 설정되었습니다!");
+}
+
+function addExpense() {
+    const category = document.getElementById("category").value;
+    const amount = Number(document.getElementById("amount").value);
+
+    if (category === "") {
+        alert("소비 항목을 선택해주세요.");
+        return;
+    }
+
+    if (!Number.isFinite(amount) || amount <= 0 || !Number.isInteger(amount)) {
+        alert("지출 금액을 1원 이상의 정수로 입력해주세요.");
+        return;
+    }
+
+    expenses.push({
+        category: category,
+        amount: amount
+    });
+
+    document.getElementById("category").value = "";
+    document.getElementById("amount").value = "";
+
+    updateScreen();
+}
+
+function deleteExpense(index) {
+    expenses.splice(index, 1);
+    updateScreen();
+}
+
+function updateScreen() {
+    const total = expenses.reduce((sum, item) => sum + item.amount, 0);
+    const remaining = allowance - total;
+    const rate = allowance > 0 ? (total / allowance) * 100 : 0;
+
+    document.getElementById("allowance").textContent = formatMoney(allowance);
+    document.getElementById("total").textContent = formatMoney(total);
+    document.getElementById("remaining").textContent = formatMoney(remaining);
+    document.getElementById("rateText").textContent = "소비 비율: " + rate.toFixed(1) + "%";
+
+    document.getElementById("progress").style.width = Math.min(rate, 100) + "%";
+
+    const message = document.getElementById("message");
+
+    if (allowance === 0) {
+        message.textContent = "먼저 월 용돈을 설정해주세요.";
+    } else if (remaining < 0) {
+        message.textContent = "주의! 용돈을 초과하여 소비했습니다.";
+    } else if (rate >= 80) {
+        message.textContent = "주의! 용돈의 80% 이상을 사용했습니다.";
+    } else if (rate >= 50) {
+        message.textContent = "적절한 소비가 필요합니다.";
+    } else {
+        message.textContent = "좋습니다! 아직 소비할 용돈이 충분합니다.";
+    }
+
+    const list = document.getElementById("expenseList");
+
+    if (expenses.length === 0) {
+        list.innerHTML = '<p class="empty">아직 등록된 지출 내역이 없습니다.</p>';
+    } else {
+        list.innerHTML = "";
+
+        expenses.forEach((item, index) => {
+            const row = document.createElement("div");
+            row.className = "expense-row";
+
+            const name = document.createElement("span");
+            name.textContent = (index + 1) + ". " + item.category + " : " + formatMoney(item.amount);
+
+            const button = document.createElement("button");
+            button.textContent = "삭제";
+            button.onclick = () => deleteExpense(index);
+
+            row.appendChild(name);
+            row.appendChild(button);
+            list.appendChild(row);
+        });
+    }
+
+    const categoryTotal = {};
+
+    for (const item of expenses) {
+        if (categoryTotal[item.category]) {
+            categoryTotal[item.category] += item.amount;
+        } else {
+            categoryTotal[item.category] = item.amount;
+        }
+    }
+
+    const categoryList = document.getElementById("categoryList");
+    categoryList.innerHTML = "";
+
+    const categories = Object.keys(categoryTotal);
+
+    if (categories.length === 0) {
+        categoryList.innerHTML = '<p class="empty">지출 내역을 추가하면 분석 결과가 표시됩니다.</p>';
+    } else {
+        for (const category of categories) {
+            const div = document.createElement("div");
+            div.className = "category-item";
+            div.textContent = category + " : " + formatMoney(categoryTotal[category]);
+            categoryList.appendChild(div);
+        }
+    }
+}
+
+updateScreen();
+</script>
+
+</body>
+</html>
